@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "project": {
+    "id": "devcontrol",
+    "name": "DevControl"
+  },
+  "release": {
+    "component": "devcontrol-gateway"
+  },
+  "environments": {
+    "staging": {
+      "runtime": {
+        "base_url": "https://api.staging.devcontrol.dev",
+        "health_path": "/healthz",
+        "revision_pointer": "/build_revision",
+        "schema_digest_pointer": "/schema_digest",
+        "checks": [
+          {
+            "name": "public_login_ready",
+            "pointer": "/public_login_ready",
+            "equals": true
+          },
+          {
+            "name": "email_ready",
+            "pointer": "/auth/providers/email/ready",
+            "equals": true
+          },
+          {
+            "name": "google_ready",
+            "pointer": "/auth/providers/google/ready",
+            "equals": true
+          }
+        ]
+      }
+    },
+    "production": {
+      "runtime": {
+        "base_url": "https://api.devcontrol.dev",
+        "health_path": "/healthz",
+        "revision_pointer": "/build_revision",
+        "schema_digest_pointer": "/schema_digest",
+        "checks": [
+          {
+            "name": "public_login_ready",
+            "pointer": "/public_login_ready",
+            "equals": true
+          }
+        ]
+      }
+    }
+  },
+  "policy": {
+    "candidate": {
+      "require_runtime_verification": "staging",
+      "required_runtime_checks": [
+        "public_login_ready",
+        "email_ready",
+        "google_ready"
+      ],
+      "require_signed_release": true
+    }
+  },
+  "adapters": {
+    "validate": {
+      "environment": "ci",
+      "command": [
+        "bash",
+        "-lc",
+        "cargo test --workspace"
+      ]
+    },
+    "deploy-staging": {
+      "environment": "staging",
+      "command": [
+        "python3",
+        "scripts/opspilot_deploy_staging.py",
+        "--from-opspilot"
+      ]
+    },
+    "smoke": {
+      "environment": "staging",
+      "command": [
+        "python3",
+        "scripts/opspilot_auth_smoke.py",
+        "--from-opspilot"
+      ]
+    },
+    "deploy-canary": {
+      "environment": "production",
+      "command": [
+        "python3",
+        "scripts/opspilot_deploy_canary.py",
+        "--from-opspilot"
+      ]
+    }
+  }
+}
