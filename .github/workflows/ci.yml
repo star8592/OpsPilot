@@ -1,31 +1,50 @@
 name: CI
 
 on:
-  push:
   pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  merge_group:
+    types: [checks_requested]
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: '17 19 * * 0'
 
 permissions:
   contents: read
 
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
+concurrency:
+  group: opspilot-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
-      - uses: actions/setup-python@v5
+jobs:
+  fast-gate:
+    name: Fast gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
+      - name: Validate package
+        run: bash scripts/ci.sh
 
-      - name: Verify OpenSSL
-        run: openssl version
-
-      - name: Compile
-        run: python3 -m compileall -q opspilot tests
-
-      - name: Unit tests
-        run: python3 -m unittest discover -s tests -v
-
-      - name: Validate DevControl example contract
-        run: python3 -m opspilot validate-project --project-file examples/devcontrol.project.example.json
+  compatibility:
+    name: Python ${{ matrix.python }} compatibility
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: true
+      matrix:
+        python: ['3.11', '3.14']
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Validate package
+        run: bash scripts/ci.sh
