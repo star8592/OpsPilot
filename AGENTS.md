@@ -1,5 +1,10 @@
 # OpsPilot contributor contract
 
+## Cross-project access/authentication preflight (2026-10-30)
+
+Before SSH, remote DevControl/Zoria/Next execution, deployment, OAuth, browser, device approval, merchant payment or secret operations, read the [canonical EngineeringOS access/auth lessons](https://github.com/star8592/EngineeringOS/blob/main/docs/operations/CROSS_PROJECT_ACCESS_AND_AUTH_LESSONS.md). Confirm this project's last successful host alias and authorized channel; do not use another project's IP/keys. Distinguish SSH connected, tool authorized and real business E2E; follow existing project-specific AGENTS instructions. An error or tool denial is not permission to bypass safety controls.
+
+
 OpsPilot is a production control plane. Deterministic refusal and explicit evidence are product features.
 
 - Keep Core product-agnostic. Product names, hostnames, service units, provider secrets and business-specific checks belong in adapters.
